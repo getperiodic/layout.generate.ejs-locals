@@ -60,7 +60,11 @@ var ejs = require('ejs')
  *
  */
 
+var ejsCurrentFilePath ="";
+
 var renderFile = module.exports = function(file, options, fn){
+  // console.log("file",file)
+    ejsCurrentFilePath = file;
 
   // Express used to set options.locals for us, but now we do it ourselves
   // (EJS does some __proto__ magic to expose these funcs/values in the template)
@@ -81,6 +85,8 @@ var renderFile = module.exports = function(file, options, fn){
   // override locals for layout/partial bound to current options
   options.locals.layout  = layout.bind(options);
   options.locals.partial = partial.bind(options);
+  options.locals.localFileRoot = dirname(file);
+  options.locals.periodicModule = periodicModule.bind(options);
 
   ejs.renderFile(file, options, function(err, html) {
 
@@ -137,6 +143,14 @@ var renderFile = module.exports = function(file, options, fn){
 
 };
 
+function periodicModule(view,data,options){
+  var root = dirname(ejsCurrentFilePath)
+  var templateFilePath = path.resolve(root,view)+".ejs";
+  var template = fs.readFileSync(templateFilePath, 'utf8');
+  var html = ejs.render(template,data);
+  return ejs.render(template,data);
+  // return "perrr";
+}
 /**
  * Memory cache for resolved object names.
  */
